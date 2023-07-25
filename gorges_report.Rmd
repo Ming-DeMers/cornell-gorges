@@ -2,7 +2,7 @@
 title: "Cornell Gorges"
 subtitle: "A Data-Driven Look at the Ithacan Gorges"
 author: "Ming DeMers"
-date: "`r Sys.Date()`"
+date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output: 
   html_document:
     toc: true
@@ -56,7 +56,7 @@ gorges <- c(
 
 ```
 
-# Data Cleaning
+## Data Cleaning
 
 ```{r}
 
@@ -107,7 +107,10 @@ gorge_2022 |>
   filter(steward_name != '') |>
   ggplot(aes(x = steward_name)) + 
   geom_histogram(stat = 'Count') +
-  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+  theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
+  labs(
+    title = 'Frequency of Shifts by Gorge Steward'
+  )
 
 gorge_2022 |>
   ggplot(aes(x = date, y = observed_gorge_users)) +
@@ -124,6 +127,17 @@ gorge_2022 |>
        x = "Date", 
        y = "Count")
   
+gorge_2022 |>
+  drop_na(observed_gorge_users) |>
+  mutate(dayofweek = weekdays(date)) |>
+  group_by(dayofweek) |>
+  summarize(weekday_count = sum(observed_gorge_users)) |>
+  ggplot(aes(dayofweek, weekday_count)) +
+  geom_point() +
+  labs(
+    title = "Total Visitors by Weekday"
+  )
+
 ```
 # Word Usage
 ```{r}
