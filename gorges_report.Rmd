@@ -1,47 +1,179 @@
 ---
-title: "cornell_gorges"
+title: "Cornell Gorges"
+subtitle: "A Data-Driven Look at the Ithacan Gorges"
 author: "Ming DeMers"
 date: "`r Sys.Date()`"
-output: html_document
+output: 
+  html_document:
+    toc: true
+    toc_depth: 3
+    toc_float: true
 ---
+
+# Introduction
+
+The gorges at Cornell University are one of the university's most iconic and scenic features. Nestled in the heart of the campus, Cornell's gorges are a series of deep and narrow ravines carved by the flow of water over thousands of years. These beautiful natural formations offer a tranquil escape from the hustle and bustle of campus life, providing students and visitors with picturesque spots for relaxation and exploration. While the gorges are captivating, they can be deceptively dangerous. Safety measures are enforced and visitors are urged to follow the guidelines. 
+
+The Gorge Stewards Program was established in 2014 to improve safety and enjoyment of the gorges, following the death of a student earlier that year. Gorge stewards walk the paths from May to September to provide information about trails, safety rules, natural history, activities, and swimming alternatives. Stewards also track visitor use, including unauthorized or illegal uses.
+
+This project will explore how usage of the Gorges has fluctuated, how violations of gorge rules has decreased, and explain overall the changing landscape of the Gorges.
+
+# The Data
+
+The data is sourced from the Gorge Stewards Program, courtesy of the Cornell Botanic Gardens and Cornell Outdoor Education (COE). It comprises of a table for each year recorded, with a number of variables detailing gorge usage, violations, weather and more. 
 
 ```{r setup, include=FALSE}
 #| label: import-load
 
 library(tidyverse)
+library(tidylog)
+library(janitor)
 # knitr::opts_chunk$set(echo = TRUE)
 
-gorge_2015 <- read.csv('data/Gorge Steward Log  - 2015 Season.csv')
-gorge_2016 <- read.csv('data/Gorge Steward Log  - 2016 Season.csv')
-gorge_2017 <- read.csv('data/Gorge Steward Log  - 2017 Season.csv')
-gorge_2018 <- read.csv('data/Gorge Steward Log  - 2018 Seson.csv')
-gorge_2019 <- read.csv('data/Gorge Steward Log  -  2019 Season.csv')
-gorge_2015 <- read.csv('data/Gorge Steward Log  - 2015 Season.csv')
-gorge_2020 <- read.csv('data/Gorge Steward Log  - 2020 seaon.csv')
-gorge_2021 <- read.csv('data/Gorge Steward Log  - 2021 Season.csv')
-gorge_2022 <- read.csv('data/Gorge Steward Log  - 2022 Season.csv')
-gorge_2023 <- read.csv('data/Gorge Steward Log  - 2023 Season.csv')
+gorge_2015_raw <- read.csv('data/Gorge Steward Log  - 2015 Season.csv')
+gorge_2016_raw <- read.csv('data/Gorge Steward Log  - 2016 Season.csv')
+gorge_2017_raw <- read.csv('data/Gorge Steward Log  - 2017 Season.csv')
+gorge_2018_raw <- read.csv('data/Gorge Steward Log  - 2018 Seson.csv')
+gorge_2019_raw <- read.csv('data/Gorge Steward Log  -  2019 Season.csv')
+gorge_2015_raw <- read.csv('data/Gorge Steward Log  - 2015 Season.csv')
+gorge_2020_raw <- read.csv('data/Gorge Steward Log  - 2020 seaon.csv')
+gorge_2021_raw <- read.csv('data/Gorge Steward Log  - 2021 Season.csv')
+gorge_2022_raw <- read.csv('data/Gorge Steward Log  - 2022 Season.csv')
+gorge_2023_raw <- read.csv('data/Gorge Steward Log  - 2023 Season.csv')
+
+gorges <- c(
+  gorge_2015_raw,
+  gorge_2016_raw,
+  gorge_2016_raw,
+  gorge_2017_raw,
+  gorge_2018_raw,
+  gorge_2019_raw,
+  gorge_2020_raw,
+  gorge_2021_raw,
+  gorge_2022_raw,
+  gorge_2023_raw
+)
+
+```
+
+# Data Cleaning
+
+```{r}
+
+clean_gorge <- function(df) {
+  df <- df |>
+  mutate(Date = as.Date(Date, format('%m/%d/%Y'))) |>
+  drop_na(Date) |>
+  mutate(High.Temperature = as.numeric(High.Temperature)) |> 
+  clean_names()
+  
+  colnames(df) <- gsub("number\\_of\\_", "", colnames(df))
+  
+  return(df)
+}
+
+# lapply(gorges, function)
+
+gorge_2022_clean <- gorge_2022_raw |>
+  clean_gorge() 
+
+gorge_2022_clean <- gorge_2022_clean |>
+  mutate(date = replace(date, row_number() == 23, '2022-06-09')) |>
+  mutate(steward_name = if_else(steward_name == "Philip", 
+                                "Phillip", 
+                                steward_name)) |>
+  mutate(steward_name = str_replace_all(
+    str_to_title(steward_name), 
+    " ", 
+    "")) 
+    
+
+gorge_2022 <- gorge_2022_clean
+```
+
+# A Look at 2022
+
+```{r}
+#| label: point-date-high-temp
+
+gorge_2022 |>
+  ggplot(aes(x = date, y = high_temperature)) +
+  geom_point() + ylim(0, 100) + geom_line() +
+  labs(
+    title = 'Temperature Highs over Summer 2022'
+  )
+
+gorge_2022 |>
+  filter(steward_name != '') |>
+  ggplot(aes(x = steward_name)) + 
+  geom_histogram(stat = 'Count') +
+  theme(axis.text.x = element_text(angle = 90, hjust = 1))
+
+gorge_2022 |>
+  ggplot(aes(x = date, y = observed_gorge_users)) +
+  geom_point() + geom_line() + ylim(0, 350) + 
+  labs(
+    title = 'Gorge Visitors over Summer 2022'
+  )
+
+gorge_2022 |>
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = observed_gorge_users), color = "blue", linetype = "solid") +
+  geom_line(aes(y = observed_violations), color = "red", linetype = "dashed") +
+  labs(title = "Gorge Users and Violations in Summer 2022", 
+       x = "Date", 
+       y = "Count")
+  
+```
+# Word Usage
+```{r}
+library(stringr)
+
+common_prepositions <- c("this", "is", "a", "an", "the", "and", "with", "than", "of", "in", "on", "at", "for", "to", "from", "by", "as", "but", "or", "", "-", "\"hi\"", "\"how", "\"the", "&", "(seemed", "+", "1", "10", "12-1")
+
+most_freq_words <- function(df, column, top_n, ignore_words) {
+  df %>%
+    pull(!!column) %>%
+    str_split("\\s+") %>%
+    unlist() %>%
+    tolower() %>%
+    str_replace_all("[[:punct:]]$", "") %>%  # Remove trailing punctuation marks
+    str_remove("\\d+") %>%        
+    setdiff(common_prepositions) %>%
+    table() %>%
+    as.data.frame() %>%
+    arrange(desc(Freq)) 
+}
+
+
+
+interact_words <- most_freq_words(gorge_2022, 'description_of_interactions', 50)
+
+
+```
+
+# A look at 2022 and 2021
+```{r}
+
+gorge_2021_clean <- gorge_2021_raw |>
+  clean_gorge()
+
+gorge_2021 <- gorge_2021_clean
+
+compare_df_cols(gorge_2022, gorge_2021)
+
+gorge_21_22 <- rbind(gorge_2021, gorge_2022)
+
+gorge_21_22 |>
+  ggplot(aes(x = date)) +
+  geom_line(aes(y = observed_gorge_users), color = "blue", linetype = "solid") +
+  geom_line(aes(y = observed_violations), color = "red", linetype = "dashed") +
+  labs(title = "Gorge Users and Violations in Summer 2022", 
+       x = "Date", 
+       y = "Count")
 
 
 
 ```
 
-## R Markdown
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
-
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
-
-```{r cars}
-summary(cars)
-```
-
-## Including Plots
-
-You can also embed plots, for example:
-
-```{r pressure, echo=FALSE}
-plot(pressure)
-```
-
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
