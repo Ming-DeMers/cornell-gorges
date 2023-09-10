@@ -41,18 +41,33 @@ gorge_2021_raw <- read.csv('data/Gorge Steward Log  - 2021 Season.csv')
 gorge_2022_raw <- read.csv('data/Gorge Steward Log  - 2022 Season.csv')
 gorge_2023_raw <- read.csv('data/Gorge Steward Log  - 2023 Season.csv')
 
-gorges <- c(
-  gorge_2015_raw,
-  gorge_2016_raw,
-  gorge_2016_raw,
-  gorge_2017_raw,
-  gorge_2018_raw,
-  gorge_2019_raw,
-  gorge_2020_raw,
-  gorge_2021_raw,
-  gorge_2022_raw,
-  gorge_2023_raw
-)
+gorge_2015_raw <- gorge_2015_raw |>
+  mutate(observed_gorge_users = Total.number.of.observed.gorge.users) |>
+  mutate(observed_violations= Total.number.of.observed.violations)
+
+gorge_2016_raw <- gorge_2016_raw |>
+  mutate(observed_gorge_users = Total.number.of.observed.gorge.users) |>
+  mutate(observed_violations= Total.number.of.observed.violations)
+
+gorge_2017_raw <- gorge_2017_raw |>
+  mutate(observed_gorge_users = Total.number.of.observed.gorge.users) |>
+  mutate(observed_violations= Total.number.of.observed.violations)
+
+gorge_2018_raw <- gorge_2018_raw |>
+  mutate(observed_gorge_users = Total.number.of.observed.gorge.users) |>
+  mutate(observed_violations= Total.number.of.observed.violations)
+
+gorge_2019_raw <- gorge_2019_raw |>
+  mutate(observed_gorge_users = Total.number.of.observed.gorge.users) |>
+  mutate(observed_violations= Total.number.of.observed.violations)
+
+gorge_2020_raw <- gorge_2020_raw |>
+  mutate(observed_gorge_users = Total.number.of.observed.gorge.users..Daily.) |>
+  mutate(observed_violations = Total.number.of.observed.violations..Daily.)
+
+gorge_2021_raw <- gorge_2021_raw |>
+  mutate(observed_gorge_users = Number.of.observed.gorge.users,
+         observed_violations = Number.of.observed.violations)
 
 ```
 
@@ -133,7 +148,7 @@ gorge_2022 |>
   group_by(dayofweek) |>
   summarize(weekday_count = sum(observed_gorge_users)) |>
   ggplot(aes(dayofweek, weekday_count)) +
-  geom_point() +
+  geom_col() +
   labs(
     title = "Total Visitors by Weekday"
   )
@@ -189,5 +204,73 @@ gorge_21_22 |>
 
 
 ```
+
+# Gorge Statistics
+
+## Join the Gorges
+
+```{r}
+
+gorges_raw <- read.csv('data/gorges.csv')
+
+gorges_clean <- gorges_raw |>
+  drop_na(Date) |>
+  drop_na(Number.of.observed.gorge.users) |>
+  drop_na(total.Number.of.people.obseved.violating.a.rule) |>
+  mutate(Date = as.Date(Date, format('%m/%d/%Y')),
+         observed_gorge_users = as.numeric(Number.of.observed.gorge.users),
+         observed_violations = as.numeric(
+           total.Number.of.people.obseved.violating.a.rule)) |>
+  clean_names()
+
+gorges <- gorges_clean |>
+  mutate(observed_gorge_users = ifelse(is.na(observed_gorge_users), 
+                                       0,
+                                       observed_gorge_users),
+         observed_violations = ifelse(is.na(observed_violations),
+                                      0,
+                                      observed_violations)) |>
+  filter(year(date) > (2014))
+  
+```
+
+## Yearly Stats
+
+```{r}
+
+gorges |>
+  group_by(year(date)) |>
+  summarise(tours = n(),
+            visitors = sum(observed_gorge_users),
+            stewards = length(unique(steward_name)))
+
+```
+
+Questions to answer:
+
+Does temp affect visitors?
+What day of the week or am/pm is busiest?
+How have violations gone down?
+What words are most frequent?
+How did covid affect gorge usage/how has it rebounded?
+
+Future:
+Would also like to introduce photos
+
+Public facing installation to highlight safety?
+Where is are the most violations occuring?
+
+Safety might be a great approach
+Safety report like from perfect match
+
+What do the national parks do that might be similar?
+
+Photographing the beauty of the gorges
+
+
+
+
+
+
 
 
