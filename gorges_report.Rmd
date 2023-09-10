@@ -4,10 +4,9 @@ subtitle: "A Data-Driven Look at the Ithacan Gorges"
 author: "Ming DeMers"
 date: "`r format(Sys.Date(), '%B %d, %Y')`"
 output: 
-  html_document:
+  pdf_document:
     toc: true
     toc_depth: 3
-    toc_float: true
 ---
 
 # Introduction
@@ -105,8 +104,86 @@ gorge_2022_clean <- gorge_2022_clean |>
 
 gorge_2022 <- gorge_2022_clean
 ```
+We first import the sets and clean up the data best we can.
+
+# Gorge Statistics
+We are interested in understanding the Gorges by the numbers. `Gorges` is a dataset that has all the years joined into one dataset. Due to format of the data changing, some granular detail is lost.
+
+## Join the Gorges
+
+```{r}
+
+gorges_raw <- read.csv('data/gorges.csv')
+
+gorges_clean <- gorges_raw |>
+  drop_na(Date) |>
+  drop_na(Number.of.observed.gorge.users) |>
+  drop_na(total.Number.of.people.obseved.violating.a.rule) |>
+  mutate(Date = as.Date(Date, format('%m/%d/%Y')),
+         observed_gorge_users = as.numeric(Number.of.observed.gorge.users),
+         observed_violations = as.numeric(
+           total.Number.of.people.obseved.violating.a.rule),
+         High.Temperature = as.numeric(High.Temperature)) |>
+  clean_names()
+
+gorges <- gorges_clean |>
+  mutate(observed_gorge_users = ifelse(is.na(observed_gorge_users), 
+                                       0,
+                                       observed_gorge_users),
+         observed_violations = ifelse(is.na(observed_violations),
+                                      0,
+                                      observed_violations),
+         high_temperature = ifelse(is.na(high_temperature), 
+                                   0,
+                                   high_temperature)
+         ) |>
+  filter(year(date) > (2014))
+  
+```
+
+## Yearly Stats
+
+```{r}
+
+gorges_tbl <- gorges |>
+  group_by(year(date)) |>
+  summarise(shifts_completed = n(),
+            visitors = sum(observed_gorge_users),
+            violations = sum(observed_violations),
+            stewards = length(unique(steward_name)),
+            avg_temp = mean(high_temperature[high_temperature != 0])) |>
+  mutate(year = `year(date)`)
+
+gorges_tbl
+```
+We see some interesting points. Overall, it seems that the around 14,000 visitors experience the Gorges every year, and around 12 stewards patrol every Summer. The average temperature is a high 70s, and around 100 shifts are completed every year. Notably are the years 2018, 2019, 2020, and 2021.
+
+```{r}
+
+gorges_tbl |> 
+  ggplot(aes(x = year, y = visitors)) +
+  geom_line()
+  
+gorges_tbl |> 
+  ggplot(aes(x = year, y = violations)) +
+  geom_line() + 
+  geom_smooth(method = lm, se = F)
+
+gorges_tbl |> 
+  ggplot(aes(x = year)) +
+  geom_line(aes(y = visitors), color = "blue", linetype = "solid") +
+  geom_line(aes(y = violations), color = "red", linetype = "dashed") 
+
+
+```
+Interestingly, we see the amount of visitors spikes in 2016, and falls to it lowest in 2021. 2020 shows only slightly lesser numbers than previous years, and 2022 shows membership returned near fully. It's hard to determine why this drop occured - the COVID-19 Pandemic would be a likely explanation, but that doesn't seem to account for 2020's regular number. 
+
+Over the 8 years of the program, violations overall have a downward trend, which is a good outcome of the Stewards Program. However, the decline is not steady, and there's a noticeable spike in 2020 and 2022. Again, this could be explained by the COVID pandemic: one of the few activities during the pandemic was going outside, and perhaps individuals did not follow rules as they were unaware of them or more careless during that year.
+
 
 # A Look at 2022
+
+We now choose to look at a specific year. We select 2022 as it has high visitor numbers and is more recent.
 
 ```{r}
 #| label: point-date-high-temp
@@ -181,70 +258,7 @@ interact_words <- most_freq_words(gorge_2022, 'description_of_interactions', 50)
 
 ```
 
-# A look at 2022 and 2021
-```{r}
 
-gorge_2021_clean <- gorge_2021_raw |>
-  clean_gorge()
-
-gorge_2021 <- gorge_2021_clean
-
-compare_df_cols(gorge_2022, gorge_2021)
-
-gorge_21_22 <- rbind(gorge_2021, gorge_2022)
-
-gorge_21_22 |>
-  ggplot(aes(x = date)) +
-  geom_line(aes(y = observed_gorge_users), color = "blue", linetype = "solid") +
-  geom_line(aes(y = observed_violations), color = "red", linetype = "dashed") +
-  labs(title = "Gorge Users and Violations in Summer 2022", 
-       x = "Date", 
-       y = "Count")
-
-
-
-```
-
-# Gorge Statistics
-
-## Join the Gorges
-
-```{r}
-
-gorges_raw <- read.csv('data/gorges.csv')
-
-gorges_clean <- gorges_raw |>
-  drop_na(Date) |>
-  drop_na(Number.of.observed.gorge.users) |>
-  drop_na(total.Number.of.people.obseved.violating.a.rule) |>
-  mutate(Date = as.Date(Date, format('%m/%d/%Y')),
-         observed_gorge_users = as.numeric(Number.of.observed.gorge.users),
-         observed_violations = as.numeric(
-           total.Number.of.people.obseved.violating.a.rule)) |>
-  clean_names()
-
-gorges <- gorges_clean |>
-  mutate(observed_gorge_users = ifelse(is.na(observed_gorge_users), 
-                                       0,
-                                       observed_gorge_users),
-         observed_violations = ifelse(is.na(observed_violations),
-                                      0,
-                                      observed_violations)) |>
-  filter(year(date) > (2014))
-  
-```
-
-## Yearly Stats
-
-```{r}
-
-gorges |>
-  group_by(year(date)) |>
-  summarise(tours = n(),
-            visitors = sum(observed_gorge_users),
-            stewards = length(unique(steward_name)))
-
-```
 
 Questions to answer:
 
