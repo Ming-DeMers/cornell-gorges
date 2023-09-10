@@ -21,6 +21,8 @@ This project will explore how usage of the Gorges has fluctuated, how violations
 
 The data is sourced from the Gorge Stewards Program, courtesy of the Cornell Botanic Gardens and Cornell Outdoor Education (COE). It comprises of a table for each year recorded, with a number of variables detailing gorge usage, violations, weather and more. 
 
+Violations are when visitors do not abide by posted rules of the Gorge. These include swimming, diving, or being in certain parts of the stream, trespassing, illegal substance possessions, and more. The majority of violations involve individuals trying to swim - a deceptively dangerous activity, often following to the death of a person every few years. Since the establishment of the program, no deaths or rescues have been reported; and violations have steadily decreased as more people have visited the beautiful gorges.
+
 ```{r setup, include=FALSE}
 #| label: import-load
 
@@ -67,6 +69,10 @@ gorge_2020_raw <- gorge_2020_raw |>
 gorge_2021_raw <- gorge_2021_raw |>
   mutate(observed_gorge_users = Number.of.observed.gorge.users,
          observed_violations = Number.of.observed.violations)
+
+gorge_2023_raw <- gorge_2023_raw |>
+  mutate(observed_gorge_users = Number.of.observed.gorge.users,
+         observed_violations = total.Number.of.people.obseved.violating.a.rule)
 
 ```
 
@@ -150,7 +156,7 @@ gorges_tbl <- gorges |>
   summarise(shifts_completed = n(),
             visitors = sum(observed_gorge_users),
             violations = sum(observed_violations),
-            stewards = length(unique(steward_name)),
+            # stewards = length(unique(steward_name)),
             avg_temp = mean(high_temperature[high_temperature != 0])) |>
   mutate(year = `year(date)`)
 
@@ -162,17 +168,25 @@ We see some interesting points. Overall, it seems that the around 14,000 visitor
 
 gorges_tbl |> 
   ggplot(aes(x = year, y = visitors)) +
-  geom_line()
+  geom_line() +
+  labs(
+    title = "Numbers of Visitors Each Summer"
+  )
   
 gorges_tbl |> 
   ggplot(aes(x = year, y = violations)) +
   geom_line() + 
-  geom_smooth(method = lm, se = F)
+  geom_smooth(method = lm, se = F) +
+  labs(
+    title = "Numbers of Violations Each Summer"
+  )
 
 gorges_tbl |> 
   ggplot(aes(x = year)) +
   geom_line(aes(y = visitors), color = "blue", linetype = "solid") +
-  geom_line(aes(y = violations), color = "red", linetype = "dashed") 
+  geom_line(aes(y = violations), color = "red", linetype = "dashed") +
+  labs(
+    title = "Number of Visitors and Violations Each Summer")
 
 
 ```
@@ -192,7 +206,9 @@ gorge_2022 |>
   ggplot(aes(x = date, y = high_temperature)) +
   geom_point() + ylim(0, 100) + geom_line() +
   labs(
-    title = 'Temperature Highs over Summer 2022'
+    title = 'Temperature Highs over Summer 2022',
+    x = "Date",
+    y = 'Temperature High'
   )
 
 gorge_2022 |>
@@ -201,14 +217,18 @@ gorge_2022 |>
   geom_histogram(stat = 'Count') +
   theme(axis.text.x = element_text(angle = 90, hjust = 1)) +
   labs(
-    title = 'Frequency of Shifts by Gorge Steward'
+    title = 'Frequency of Shifts by Gorge Steward',
+    x = "Steward",
+    y = 'Count of Shifts'
   )
 
 gorge_2022 |>
   ggplot(aes(x = date, y = observed_gorge_users)) +
   geom_point() + geom_line() + ylim(0, 350) + 
   labs(
-    title = 'Gorge Visitors over Summer 2022'
+    title = 'Gorge Visitors over Summer 2022',
+    x = 'Date',
+    y = 'Observed Gorge Users'
   )
 
 gorge_2022 |>
@@ -226,12 +246,71 @@ gorge_2022 |>
   summarize(weekday_count = sum(observed_gorge_users)) |>
   ggplot(aes(dayofweek, weekday_count)) +
   geom_col() +
+  scale_x_discrete(limits = c("Sunday", 
+                              "Monday", 
+                              "Tuesday", 
+                              "Wednesday", 
+                              "Thursday", 
+                              "Friday", 
+                              "Saturday")) +
   labs(
-    title = "Total Visitors by Weekday"
+    title = "Total Visitors by Weekday",
+    x = 'Day of the Week',
+    y = "Count of Visitors" 
   )
 
 ```
-# Word Usage
+
+In the Summer of 2022, we find that some 6 stewards walked the Gorges, counting 13,229 visitors and over 500 violations. The temperature hovers around 80 degrees Fahrenheit and amount of visitors peaks at above 300, but usually hovers around 115. 
+
+The peaks are early June, July 4th, and late August. This makes sense as early June is when students finished with finals can explore campus a bit before they leave, and those who stay in Ithaca look for some adventure. July 4th is of course a time when many will want to enjoy nature with family, and late August is when students return, many excited to visit the famous gorges. The peak continues though early-September (when the Gorge Stewarding program pauses), as there are simply more students on campus.
+
+Violations seem to largely follow the peaks of visitors - notiable in June and July 4th. Overall, however, violations seem t decrease over time, and very few are recorded in late-August. 
+
+Finally, we see that Saturday and Sunday, the weekends, are the most popular days to visit the gorges, while Wednesday is the least popular.
+
+# Possible Correlations
+
+We are now interested in asking - do certain factors correlate and/or cause higher amount of visitors or violators?
+
+## Correlation Matrix
+We first construct a correlation matrix
+
+```{r}
+
+gorge_2020_raw |>
+  select(High.Temperature, observed_gorge_users, observed_violations) |>
+  drop_na() |>
+  cor(method = "pearson", use = "complete.obs")
+
+gorge_2021_raw |>
+  select(High.Temperature, observed_gorge_users, observed_violations) |>
+  cor(method = "pearson", use = "complete.obs")
+
+gorge_2022 |>
+  select(high_temperature, observed_gorge_users, observed_violations) |>
+  cor(method = "pearson", use = "complete.obs")
+
+gorge_2023_raw |>
+  select(High.Temperature, observed_gorge_users, observed_violations) |>
+  cor(method = "pearson", use = "complete.obs")
+
+
+
+```
+Interestingly, we see that the highest correlations are observed users to violations, and violations to temperature. We see that gorge users tend to correlate with violations by almost 0.50.
+
+On average the r-squared value for the past 4 years is `r 0.19181080 + 0.1662166 + 0.09303063 + 0.24960427 / 4`. 2023 has a correlation of 0.25.
+
+However, temperature seems to have to no correlation with gorge visitors. Thus, high temperatures may not dissuade visiting the gorge, but it might cause more violations, This makes sense as hotter days mean visitors may be more likely to try swimming in the gorge or seeking out shady but restricted areas. Higher temperatures may also mean people are more irrate or less willing to abide by posted signs. 
+
+# Future Work
+There is still some interesting questions to be answered in this dataset. For example, how might certain variables predict number of violations? How are violations and interactions described?
+
+## Text Analysis
+
+We are also given descriptions of each shift. We are interested in the most often used words and the general sentiment of each interaciton. Futher text analysis would be required to achieve this. The currently work is insufficient for results.
+
 ```{r}
 library(stringr)
 
@@ -255,31 +334,23 @@ most_freq_words <- function(df, column, top_n, ignore_words) {
 
 interact_words <- most_freq_words(gorge_2022, 'description_of_interactions', 50)
 
-
 ```
 
 
+## Machine Learning
+Some work in ML could also be done. This would include using some variables, such as temperature, number of visitors, the date, or Steward, to possibly predict amount of violators that day. Any model would likely be weak, but it would be an interesting experiment to train a classification model. 
 
-Questions to answer:
+# Conclusion
 
-Does temp affect visitors?
-What day of the week or am/pm is busiest?
-How have violations gone down?
-What words are most frequent?
-How did covid affect gorge usage/how has it rebounded?
+The Gorges of Ithaca are a beautiful natural landmark that attracts thousands of Visitors every Summer. The Gorges Program ensure the gorges are safe and enjoyable for everyone. As a part of their job, Gorge Stewards track certain data points that we analyze. Unsurprisingly, the most popular times to visit the Gorges are towards the beginning or end of the academic year, and on the Fourth of July. Overall number of visitors has increased, while violations have significantly decreased since the inception of the program. COVID did not seem to have too dramatic of an effect; although 2021 had the lowest visitor count by far. 
 
-Future:
-Would also like to introduce photos
+It makes sense that as there are more visitors in the gorges, there will be more violations. Interestingly, however, it is also possible that high temperatures cause more violations.
 
-Public facing installation to highlight safety?
-Where is are the most violations occuring?
+There's more analysis that can be conducted, especially in terms of text analysis and model training. 
 
-Safety might be a great approach
-Safety report like from perfect match
+The data reinforces the success of the Gorge Stewards Program and its positive effect on the Gorges. The program has evolved since its founding in 2012 (e.g. stewards used to offer tours, picking up trash) but its mission has remained the same: to protect and enjoy the beauty of the gorges. 
 
-What do the national parks do that might be similar?
 
-Photographing the beauty of the gorges
 
 
 
