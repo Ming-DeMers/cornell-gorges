@@ -29,6 +29,7 @@ Violations are when visitors do not abide by posted rules of the Gorge. These in
 library(tidyverse)
 library(tidylog)
 library(janitor)
+library(knitr)
 # knitr::opts_chunk$set(echo = TRUE)
 
 gorge_2015_raw <- read.csv('data/Gorge Steward Log  - 2015 Season.csv')
@@ -171,8 +172,8 @@ gorges_tbl |>
   geom_line() +
   labs(
     title = "Numbers of Visitors Each Summer"
-  )
-  
+  ) 
+
 gorges_tbl |> 
   ggplot(aes(x = year, y = violations)) +
   geom_line() + 
@@ -188,6 +189,12 @@ gorges_tbl |>
   labs(
     title = "Number of Visitors and Violations Each Summer")
 
+gorges_tbl |> 
+  ggplot(aes(x = year, y = avg_temp)) +
+  geom_line() + 
+  labs(
+    title = "Average Temperature Each Summer"
+  )
 
 ```
 Interestingly, we see the amount of visitors spikes in 2016, and falls to it lowest in 2021. 2020 shows only slightly lesser numbers than previous years, and 2022 shows membership returned near fully. It's hard to determine why this drop occured - the COVID-19 Pandemic would be a likely explanation, but that doesn't seem to account for 2020's regular number. 
@@ -296,7 +303,6 @@ gorge_2023_raw |>
   cor(method = "pearson", use = "complete.obs")
 
 
-
 ```
 Interestingly, we see that the highest correlations are observed users to violations, and violations to temperature. We see that gorge users tend to correlate with violations by almost 0.50.
 
@@ -342,7 +348,7 @@ Some work in ML could also be done. This would include using some variables, suc
 
 # Conclusion
 
-The Gorges of Ithaca are a beautiful natural landmark that attracts thousands of Visitors every Summer. The Gorges Program ensure the gorges are safe and enjoyable for everyone. As a part of their job, Gorge Stewards track certain data points that we analyze. Unsurprisingly, the most popular times to visit the Gorges are towards the beginning or end of the academic year, and on the Fourth of July. Overall number of visitors has increased, while violations have significantly decreased since the inception of the program. COVID did not seem to have too dramatic of an effect; although 2021 had the lowest visitor count by far. 
+The Gorges of Ithaca are a beautiful natural landmark that attracts thousands of Visitors every Summer. The Gorges Program ensure the gorges are safe and enjoyable for everyone. As a part of their job, Gorge Stewards track certain data points that we analyze. Unsurprisingly, the most popular times to visit the Gorges are towards the beginning or end of the academic year, and on the Fourth of July. Overall number of visitors has decreased, while violations have significantly decreased since the inception of the program. COVID did not seem to have too dramatic of an effect; although 2021 had the lowest visitor count by far. 
 
 It makes sense that as there are more visitors in the gorges, there will be more violations. Interestingly, however, it is also possible that high temperatures cause more violations.
 
