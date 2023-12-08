@@ -1,0 +1,3 @@
+Naive possibility:
+collapsing all the text columns into just one
+- but this might lead to having more information than compared to recently
