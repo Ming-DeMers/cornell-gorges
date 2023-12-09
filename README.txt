@@ -1,22 +1,4 @@
-Future work:
+The gorges at Cornell University are one of the university’s most iconic and scenic features. While the gorges are captivating, they can be deceptively dangerous
+The Gorge Stewards Program was established in 2014 to improve the safety and enjoyment of the gorges. The stewards walk the paths from May to September to provide information about trails, safety rules, natural history, activities, and swimming alternatives. Stewards also track visitor use, including unauthorized or illegal uses. The stewards contribute to a logbook that tabulates the amount of visitors in the gorges, the amount of violations, as well as tracking the temperature and issues/hazards in the gorge. The stewards describe each interaction they have and observations they make during their shift.
 
-Questions to answer:
-
-Does temp affect visitors?
-What day of the week or am/pm is busiest?
-How have violations gone down?
-What words are most frequent?
-How did covid affect gorge usage/how has it rebounded?
-
-Future:
-Would also like to introduce photos
-
-Public facing installation to highlight safety?
-Where is are the most violations occuring?
-
-Safety might be a great approach
-Safety report like from perfect match
-
-What do the national parks do that might be similar?
-
-Photographing the beauty of the gorges
+This project analyzes that log book, looking for trends in data over the years, examining the quantitative and qualitative features of the log. We conduct an exploratory data analysis, as well as textual analysis, extracting sentiment of the entries, types of interactions, and types of observations, and trying to predict whether an interaction can be classified as a violation with both statistical and NLP methods.
