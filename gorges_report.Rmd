@@ -151,7 +151,6 @@ gorges <- gorges_clean |>
 ## Yearly Stats
 
 ```{r}
-
 gorges_tbl <- gorges |>
   group_by(year(date)) |>
   summarise(shifts_completed = n(),
@@ -160,8 +159,12 @@ gorges_tbl <- gorges |>
             # stewards = length(unique(steward_name)),
             avg_temp = mean(high_temperature[high_temperature != 0])) |>
   mutate(year = `year(date)`)
+```
 
-gorges_tbl
+
+```{r}
+gorges_tbl |>
+write.csv('data/gorges_table.csv')
 ```
 We see some interesting points. Overall, it seems that the around 14,000 visitors experience the Gorges every year, and around 12 stewards patrol every Summer. The average temperature is a high 70s, and around 100 shifts are completed every year. Notably are the years 2018, 2019, 2020, and 2021.
 
