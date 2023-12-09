@@ -52,3 +52,6 @@ data/yg821jf8611_wy_statewide_2020_04_01.csv.zip
 data/ca_san_diego_2020_04_01.csv
 
 /.quarto/
+
+# stewards log book
+/data
